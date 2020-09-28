@@ -5,12 +5,12 @@ const server = express();
 
 server.use(express.json());
 
-const users = [
+let users = [
   { id: 1, name: "Jane Doe", bio: "Not Tarzans Wife" },
   { id: 2, name: "Frank", Bio: "Friend" },
   { id: 3, name: "Dave", Bio: "Another friend" },
 ];
-let nextId = 2;
+let nextId = 4;
 
 server.get("/api/users", (req, res) => {
   try {
@@ -22,7 +22,6 @@ server.get("/api/users", (req, res) => {
     });
   }
 });
-// don't know how to show error
 
 server.post("/api/users", (req, res) => {
   const data = req.body;
@@ -59,33 +58,41 @@ server.get("/api/users/:id", (req, res) => {
 
 server.delete("/api/users/:id", (req, res) => {
   const id = Number(req.params.id);
-  users = users.filter((l) => l.id !== id);
-  if (isFound === true) {
-    res.status(200).json({ data: users });
-  } else if (isFound === false) {
-    res
-      .status(404)
-      .json({ errorMessage: "The user with the specified ID does not exist" });
-  } else {
+  let hasId = users.some((item) => item.id === id);
+  try {
+    if (hasId) {
+      users = users.filter((l) => l.id !== id);
+      res.status(200).json({ data: users });
+    } else {
+      res.status(404).json({
+        errorMessage: "The user with the specified ID does not exist",
+      });
+    }
+  } catch {
     res
       .status(500)
       .json({ errorMessage: "The user could could not be removed" });
   }
 });
-// need to come back
 
 server.put("/api/users/:id", (req, res) => {
   const id = Number(req.params.id);
   const changes = req.body;
   const found = users.find((item) => item.id === id);
 
-  if (found) {
-    Object.assign(found, changes);
-    res.status(200).json({ data: users });
-  } else if (!found) {
+  try {
+    if (found) {
+      Object.assign(found, changes);
+      res.status(200).json({ data: users });
+    } else {
+      res
+        .status(400)
+        .json({ errorMessage: "Please provide name and bio for the user" });
+    }
+  } catch {
     res
-      .status(400)
-      .json({ errorMessage: "Please provide name and bio for the user" });
+      .status(500)
+      .json({ errorMessage: "The user information could not be modified" });
   }
 });
 
